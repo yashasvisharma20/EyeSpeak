@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EyeSpeak: Speak Without Words</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0f5eb6; /* EyeSpeak Blue */
+            --secondary: #093b73;
+            --text-dark: #1a1a1a;
+            --bg-light: #ffffff; /* Matched to logo background */
+        }
+
+        body {
+            font-family: 'Poppins', 'Segoe UI', sans-serif;
+            background: var(--bg-light);
+            color: var(--text-dark);
+            overflow-x: hidden;
+        }
+
+        /* Navbar */
+        .navbar {
+            padding: 1.2rem 0;
+            font-size: 1.1rem;
+        }
+
+        .nav-link {
+            font-weight: 500;
+            color: var(--primary);
+            padding: 0.5rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--secondary);
+        }
+
+        /* Hero Section */
+        .hero-section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            padding: 2rem 1rem;
+        }
+
+        .hero-logo {
+            max-width: 280px;
+            width: 100%;
+            height: auto;
+            margin-bottom: 1rem;
+        }
+
+        .typewriter {
+            font-size: clamp(1.2rem, 4vw, 1.8rem);
+            font-weight: 500;
+            color: var(--primary);
+            border-right: 3px solid var(--primary);
+            white-space: nowrap;
+            overflow: hidden;
+            min-height: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .hero-subtext {
+            max-width: 600px;
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+            margin-bottom: 1.5rem;
+        }
+
+        /* Buttons */
+        .btn-eyespeak {
+            background: var(--primary);
+            color: #fff;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-eyespeak:hover {
+            background: var(--secondary);
+            color: #fff;
+        }
+
+        /* Features */
+        .features-section {
+            padding: 4rem 1rem;
+            background: #f8faff;
+        }
+
+        .feature-card {
+            border: 1px solid var(--primary);
+            border-radius: 12px;
+            padding: 2rem 1rem;
+            text-align: center;
+            transition: transform 0.3s ease;
+            height: 100%;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                font-size: 1rem;
+            }
+            .hero-logo {
+                max-width: 200px;
+            }
+            .btn-eyespeak {
+                padding: 10px 20px;
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" href="/explore">Explore</a></li>
+                <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="EyeSpeak Logo" class="hero-logo">
+        <div class="typewriter" id="typewriter"></div>
+        <p class="hero-subtext">
+            EyeSpeak turns blinks into instant speech — fast, and with little effort for those who can’t speak.
+        </p>
+        <div class="d-flex justify-content-center flex-wrap">
+            <a href="/explore" class="btn btn-eyespeak mx-2 my-1">Get Started</a>
+            <a href="/dashboard" class="btn btn-outline-primary mx-2 my-1">View Dashboard</a>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-4 col-sm-6">
+                    <div class="feature-card">
+                        <i class="fas fa-eye feature-icon"></i>
+                        <h5>Calibrate Eyes</h5>
+                        <p>Set up blink patterns for precise detection.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-6">
+                    <div class="feature-card">
+                        <i class="fas fa-comment feature-icon"></i>
+                        <h5>Blink-to-Phrase</h5>
+                        <p>Convert blinks into ready-to-use phrases.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-6">
+                    <div class="feature-card">
+                        <i class="fas fa-brain feature-icon"></i>
+                        <h5>AI-Powered</h5>
+                        <p>Smart detection for reliable communication.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Typewriter Loop Script -->
+    <script>
+        const textArray = ["Speak Without Words. Just Blink."];
+        const typingDelay = 100;
+        const erasingDelay = 50;
+        const newTextDelay = 1000;
+        let textArrayIndex = 0;
+        let charIndex = 0;
+
+        const typedTextSpan = document.getElementById("typewriter");
+
+        function type() {
+            if (charIndex < textArray[textArrayIndex].length) {
+                typedTextSpan.textContent += textArray[textArrayIndex].charAt(charIndex);
+                charIndex++;
+                setTimeout(type, typingDelay);
+            } else {
+                setTimeout(erase, newTextDelay);
+            }
+        }
+
+        function erase() {
+            if (charIndex > 0) {
+                typedTextSpan.textContent = textArray[textArrayIndex].substring(0, charIndex - 1);
+                charIndex--;
+                setTimeout(erase, erasingDelay);
+            } else {
+                setTimeout(type, typingDelay);
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            if (textArray.length) setTimeout(type, newTextDelay + 250);
+        });
+    </script>
+
+</body>
+</html>

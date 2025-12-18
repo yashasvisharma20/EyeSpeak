@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>EyeSpeak Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00BFA6;
+            --secondary: #00796B;
+            --light: #f0fdfc;
+            --text-dark: #1a1a1a;
+        }
+
+        body {
+            background: linear-gradient(to right, #eef2f3, #cfd9df);
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 16px;
+            color: var(--text-dark);
+        }
+
+        h2, h5 {
+            font-weight: 600;
+        }
+
+        .btn {
+            margin: 5px;
+            font-size: 15px;
+            border-radius: 30px;
+            font-weight: 500;
+        }
+
+        .btn-eyespeak {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+        }
+
+        .btn-eyespeak:hover {
+            background: var(--secondary);
+            color: #fff;
+        }
+
+        .card-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+            padding: 20px;
+            margin-top: 20px;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .top-right {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 15px;
+        }
+
+        .explore-link {
+            background: none;
+            color: var(--secondary);
+            font-weight: 500;
+            border: 2px solid var(--secondary);
+            padding: 6px 18px;
+            border-radius: 25px;
+            text-decoration: none;
+            transition: 0.3s ease;
+        }
+
+        .explore-link:hover {
+            background: var(--secondary);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .spinner-border {
+            width: 1.5rem;
+            height: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <h2 class="text-center mb-3">EyeSpeak – Dashboard</h2>
+
+        <div class="top-right">
+            <a href="/explore" class="explore-link">↩️ Go to Explore</a>
+        </div>
+
+        <div class="card-section">
+            <h5>User History</h5>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <label for="userFilter" class="form-label">Select User:</label>
+                    <select id="userFilter" class="form-select">
+                        <option value="all">All Users</option>
+                        {% for user in users %}
+                            <option value="{{ user }}">{{ user }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <a href="/download" class="btn btn-eyespeak">Download History (CSV)</a>
+                </div>
+            </div>
+            <div id="dataLoading" class="text-center p-5" style="display:none;">
+                <div class="spinner-border text-primary" role="status"></div>
+                <span class="ms-2">Loading data...</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped" id="historyTable">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Blink ID</th>
+                            <th>Duration (ms)</th>
+                            <th>EAR</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card-section mt-4">
+            <h5>Data Collection for Model Training</h5>
+            <p>Help improve EyeSpeak's accuracy by collecting new blink data with your consent. This data is used to train a more personalized model. This feature will start a video stream and collect raw blink data (duration and EAR).</p>
+            
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="consentCheckbox">
+                <label class="form-check-label" for="consentCheckbox">
+                    I give my explicit permission to collect my blink data and understand the purpose is for model training.
+                </label>
+            </div>
+            
+            <button class="btn btn-eyespeak" id="startDataCollection" disabled>Start Data Collection</button>
+            <button class="btn btn-danger" id="stopDataCollection" disabled>Stop Data Collection</button>
+            <span id="collectionStatus" class="ms-3 text-success fw-bold"></span>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const userFilter = document.getElementById('userFilter');
+            const historyTableBody = document.querySelector('#historyTable tbody');
+            const dataLoading = document.getElementById('dataLoading');
+            const startBtn = document.getElementById('startDataCollection');
+            const stopBtn = document.getElementById('stopDataCollection');
+            const statusSpan = document.getElementById('collectionStatus');
+            const consentCheckbox = document.getElementById('consentCheckbox');
+
+            function fetchData(userId) {
+                dataLoading.style.display = 'block';
+                fetch(`/dashboard_data/${userId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        historyTableBody.innerHTML = '';
+                        if (data.length > 0) {
+                            data.forEach(row => {
+                                const tr = document.createElement('tr');
+                                tr.innerHTML = `
+                                    <td>${row.User_ID}</td>
+                                    <td>${row.Blink_ID}</td>
+                                    <td>${row.Duration_ms}</td>
+                                    <td>${row.EAR}</td>
+                                `;
+                                historyTableBody.appendChild(tr);
+                            });
+                        } else {
+                            historyTableBody.innerHTML = `<tr><td colspan="4" class="text-center">No data available.</td></tr>`;
+                        }
+                        dataLoading.style.display = 'none';
+                    })
+                    .catch(error => {
+                        console.error('Error fetching data:', error);
+                        historyTableBody.innerHTML = `<tr><td colspan="4" class="text-center">Error loading data.</td></tr>`;
+                        dataLoading.style.display = 'none';
+                    });
+            }
+
+            userFilter.addEventListener('change', (event) => {
+                const selectedUser = event.target.value;
+                fetchData(selectedUser);
+            });
+
+            consentCheckbox.addEventListener('change', () => {
+                startBtn.disabled = !consentCheckbox.checked;
+            });
+
+            startBtn.addEventListener('click', () => {
+                fetch('/start_data_collection')
+                    .then(response => response.json())
+                    .then(data => {
+                        statusSpan.innerText = data.status;
+                        startBtn.disabled = true;
+                        stopBtn.disabled = false;
+                        consentCheckbox.disabled = true;
+                    });
+            });
+
+            stopBtn.addEventListener('click', () => {
+                fetch('/stop_data_collection')
+                    .then(response => response.json())
+                    .then(data => {
+                        statusSpan.innerText = data.status;
+                        startBtn.disabled = !consentCheckbox.checked;
+                        stopBtn.disabled = true;
+                        consentCheckbox.disabled = false;
+                    });
+            });
+            
+            // Initial data load for "All Users"
+            fetchData('all');
+        });
+    </script>
+</body>
+</html>
